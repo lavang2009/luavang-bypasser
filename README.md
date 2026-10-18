@@ -1,17 +1,17 @@
 # LÙ A VANG — Link Resolver
 
-Website tiếng Việt để kiểm tra chuỗi chuyển hướng HTTP/HTTPS công khai, xem URL đích, mã phản hồi và từng bước chuyển hướng. Giao diện sáng, tối giản, responsive cho điện thoại và máy tính.
+Website tiếng Việt để theo dõi chuỗi chuyển hướng HTTP/HTTPS công khai và xem tiến trình theo thời gian thực. Giao diện sáng, tối giản, responsive cho điện thoại và máy tính.
 
 ## Công nghệ
 
 - Next.js 16 App Router + React + TypeScript
-- API Route dùng Node.js runtime
+- API Route chạy Node.js runtime và trả tiến trình theo NDJSON streaming
 - `undici` cho yêu cầu HTTP và `ipaddr.js` để kiểm tra địa chỉ IP
 - Không cần cơ sở dữ liệu hoặc API key cho chức năng cơ bản
 
 ## Yêu cầu
 
-- Node.js 20.9 trở lên
+- Node.js 20.18.1 trở lên (khuyên dùng Node.js 22 LTS)
 - npm
 
 ## Chạy trên Windows
@@ -38,18 +38,24 @@ npm run build
 1. Đẩy toàn bộ mã nguồn lên một repository GitHub.
 2. Vào Vercel → Add New → Project và import repository.
 3. Dùng Framework Preset `Next.js`, Build Command `npm run build`.
-4. Không cần thêm Environment Variables cho chức năng mặc định.
-5. Nhấn Deploy. Đây là ứng dụng Node.js/Next.js đầy đủ nên không bật Static Export.
+4. Để Node.js runtime mặc định; không bật Static Export vì dự án cần API Route.
+5. Không cần thêm Environment Variables cho chức năng mặc định.
 
-## Cách hoạt động và giới hạn
+## Khả năng
 
-- Theo dõi chuyển hướng HTTP 301, 302, 303, 307 và 308.
-- Tối đa 10 bước chuyển hướng; có giới hạn thời gian xử lý mỗi yêu cầu.
-- Chỉ hỗ trợ `http://` và `https://`, kiểm tra hostname trước khi kết nối và chặn IP riêng/nội bộ phổ biến.
-- Không lưu lịch sử vào database; kết quả trả trực tiếp cho trình duyệt.
-- Không thực thi JavaScript của website đích, không vượt đăng nhập, CAPTCHA, token, paywall hoặc bước xác minh tương tác. Không thể bảo đảm hoạt động với mọi dịch vụ.
-- Tìm thấy URL đích không có nghĩa là website an toàn.
+- Theo dõi chuyển hướng HTTP 301, 302, 303, 307 và 308 bằng yêu cầu GET.
+- Nhận diện một số chuyển hướng tự động phổ biến trong HTML như meta refresh và `window.location` với URL tĩnh.
+- Tường thuật tiến trình và các bước khi đang chạy; hiển thị đúng lỗi HTTP thay vì báo hoàn tất giả.
+- Tối đa 12 bước chuyển hướng, tối đa 64 KiB HTML được đọc ở mỗi bước và giới hạn tổng thời gian xử lý.
+- Chỉ hỗ trợ `http://` và `https://`; kiểm tra hostname/DNS và chặn địa chỉ IP riêng hoặc nội bộ nhằm giảm nguy cơ SSRF.
+- Không lưu lịch sử vào database; kết quả được trả trực tiếp cho trình duyệt.
 
-## Trước khi mở rộng cho lượng truy cập lớn
+## Giới hạn quan trọng
 
-Nên bổ sung rate limiting dùng kho lưu trữ dùng chung (ví dụ Redis) và giám sát lạm dụng. Bộ giới hạn trong bộ nhớ của một instance không phải rate limit đầy đủ cho nhiều instance Vercel. Kiểm tra bảo mật độc lập trước khi quảng bá rộng rãi.
+Không có công cụ chung nào có thể bảo đảm xử lý mọi website. Một số link phụ thuộc JavaScript động, token phiên, cookie trình duyệt, CAPTCHA, đăng nhập, giới hạn IP hoặc cơ chế chống bot sẽ được báo là không thể xác nhận, không được coi là đã hoàn tất. Công cụ không thực thi JavaScript tùy ý và không vượt cơ chế xác minh/quyền truy cập.
+
+Tìm thấy URL đích không có nghĩa là website an toàn. Hãy kiểm tra tên miền trước khi đăng nhập hoặc tải tệp.
+
+## Vận hành
+
+Trước khi mở rộng cho lượng truy cập lớn, bổ sung rate limiting dùng kho lưu trữ dùng chung (ví dụ Redis) và giám sát lạm dụng. Giới hạn trong bộ nhớ của một instance không đủ làm rate limit cho nhiều instance Vercel. Kiểm tra bảo mật độc lập trước khi quảng bá rộng rãi.

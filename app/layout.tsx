@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const siteUrl = "https://luavang.io.vn";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luavang-bypasser.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
