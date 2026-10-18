@@ -41,6 +41,14 @@ npm run build
 4. Để Node.js runtime mặc định; không bật Static Export vì dự án cần API Route.
 5. Không cần thêm Environment Variables cho chức năng mặc định.
 
+## API nhà cung cấp và CAPTCHA
+
+Dự án không có khóa API chung để vượt mọi dịch vụ rút gọn link. Link4M quảng bá tính năng Developer API, nhưng trang giới thiệu công khai không cung cấp đủ đặc tả endpoint/xác thực để cấu hình một adapter resolver có thể kiểm chứng. Hãy lấy tài liệu và quyền truy cập trực tiếp từ tài khoản/đội hỗ trợ chính thức; không dùng khóa rò rỉ hoặc khóa chia sẻ trên mạng.
+
+Công cụ không tự động né CAPTCHA, JavaScript challenge, đăng nhập hay kiểm tra chống bot của website bên thứ ba. Nó phải báo rằng liên kết chưa xác minh được. Các API CAPTCHA như Turnstile/reCAPTCHA có mục đích xác minh người dùng trên website do bạn quản lý, không phải giải CAPTCHA của website khác.
+
+Xem hướng dẫn kiểm toán và cấu hình tại [`docs/API_PROVIDER_AUDIT.md`](docs/API_PROVIDER_AUDIT.md).
+
 ## Khả năng
 
 - Theo dõi chuyển hướng HTTP 301, 302, 303, 307 và 308 bằng yêu cầu GET.
