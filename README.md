@@ -54,6 +54,7 @@ Xem hướng dẫn kiểm toán và cấu hình tại [`docs/API_PROVIDER_AUDIT.
 - Theo dõi chuyển hướng HTTP 301, 302, 303, 307 và 308 bằng yêu cầu GET.
 - Nhận diện một số chuyển hướng tự động phổ biến trong HTML như meta refresh và `window.location` với URL tĩnh.
 - Tường thuật tiến trình và các bước khi đang chạy; hiển thị đúng lỗi HTTP thay vì báo hoàn tất giả.
+- Khi dịch vụ chặn máy chủ phân tích, có nút mở link gốc trong trình duyệt để người dùng tự hoàn tất quy trình được website cho phép và ô ghi nhận URL do người dùng tự cung cấp. URL thủ công luôn được đánh dấu chưa xác minh bởi máy chủ.
 - Tối đa 12 bước chuyển hướng, tối đa 64 KiB HTML được đọc ở mỗi bước và giới hạn tổng thời gian xử lý.
 - Chỉ hỗ trợ `http://` và `https://`; kiểm tra hostname/DNS và chặn địa chỉ IP riêng hoặc nội bộ nhằm giảm nguy cơ SSRF.
 - Không lưu lịch sử vào database; kết quả được trả trực tiếp cho trình duyệt.

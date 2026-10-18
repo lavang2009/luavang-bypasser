@@ -161,10 +161,10 @@ function looksLikeVerificationPage(html: string, headers: Headers): boolean {
   return /captcha|turnstile|verify (?:that )?you are human|checking your browser|attention required|enable javascript and cookies|bot detection|automated requests/i.test(html.slice(0, 16_000));
 }
 
-function errorMessageForStatus(status: number, verification: boolean): string {
+function errorMessageForStatus(status: number, verification: boolean, hostname: string): string {
   if (verification) return `Website yêu cầu xác minh bằng CAPTCHA, JavaScript hoặc kiểm tra chống bot (HTTP ${status}). Công cụ dừng tại đây và không vượt cơ chế xác minh.`;
   if (status === 401) return "Website yêu cầu xác thực hoặc đăng nhập (HTTP 401). Không thể xác định đích bên trong nếu thiếu quyền truy cập.";
-  if (status === 403) return "Website từ chối yêu cầu từ máy chủ phân tích (HTTP 403). Chưa thể xác nhận URL đích; đây không phải kết quả thành công.";
+  if (status === 403) return `${hostname} từ chối yêu cầu từ máy chủ phân tích (HTTP 403). Đây là giới hạn từ phía website, không phải lỗi giao diện. Chưa thể xác nhận URL đích; hãy mở link gốc trong trình duyệt nếu muốn tiếp tục theo quy trình chính thức.`;
   if (status === 407) return "Máy chủ yêu cầu proxy (HTTP 407), nên không thể tiếp tục phân tích.";
   if (status === 429) return "Website giới hạn số lượt yêu cầu (HTTP 429). Hãy chờ rồi thử lại sau.";
   if (status === 451) return "Website không cho phép truy cập nội dung này tại thời điểm kiểm tra (HTTP 451).";
@@ -284,7 +284,7 @@ async function resolveUrl(input: URL, emit: Emit): Promise<Result> {
       hops.push(hop);
       emit({ type: "hop", hop });
       await dispatcher.close().catch(() => undefined);
-      return finishError(errorMessageForStatus(response.status, isVerification), knownCandidate());
+      return finishError(errorMessageForStatus(response.status, isVerification, current.hostname), knownCandidate());
     }
 
     const htmlRedirect = response.status >= 200 && response.status < 400

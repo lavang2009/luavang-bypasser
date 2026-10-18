@@ -41,6 +41,16 @@ function getHostname(value: string): string {
   }
 }
 
+function getSafeHttpUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value.trim());
+    if ((parsed.protocol !== "http:" && parsed.protocol !== "https:") || parsed.username || parsed.password) return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 function getStatusLabel(status: number): string {
   if (status >= 200 && status < 300) return "Thành công";
   if (status >= 300 && status < 400) return "Chuyển hướng";
@@ -92,6 +102,9 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState<ProgressState>({ percent: 1, message: "Đang chuẩn bị…", stage: "idle" });
   const [liveHops, setLiveHops] = useState<Hop[]>([]);
+  const [manualDestination, setManualDestination] = useState("");
+  const [savedManualDestination, setSavedManualDestination] = useState<string | null>(null);
+  const [manualError, setManualError] = useState("");
 
   function applyStreamEvent(event: StreamEvent): void {
     if (event.type === "progress") {
@@ -121,6 +134,9 @@ export default function Home() {
     setCopied(false);
     setResult(null);
     setLiveHops([]);
+    setManualDestination("");
+    setSavedManualDestination(null);
+    setManualError("");
     setProgress({ percent: 2, message: "Đang khởi tạo yêu cầu…", stage: "start" });
 
     try {
@@ -188,7 +204,20 @@ export default function Home() {
     }
   }
 
+  function handleManualDestination(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const safeUrl = getSafeHttpUrl(manualDestination);
+    if (!safeUrl) {
+      setManualError("Hãy nhập URL đầy đủ bắt đầu bằng https:// hoặc http://, không có thông tin đăng nhập nhúng.");
+      setSavedManualDestination(null);
+      return;
+    }
+    setManualError("");
+    setSavedManualDestination(safeUrl);
+  }
+
   const hops = result?.hops ?? [];
+  const sourceUrl = getSafeHttpUrl(result?.inputUrl ?? url);
   const finalHostname = result?.finalUrl ? getHostname(result.finalUrl) : "";
   const finalHttpError = Boolean(result?.status && result.status >= 400);
 
@@ -246,7 +275,7 @@ export default function Home() {
                   disabled={busy}
                   aria-describedby="url-hint"
                 />
-                {url && !busy && <button type="button" className="clear-input" onClick={() => { setUrl(""); setResult(null); setLiveHops([]); }} aria-label="Xóa đường dẫn">×</button>}
+                {url && !busy && <button type="button" className="clear-input" onClick={() => { setUrl(""); setResult(null); setLiveHops([]); setManualDestination(""); setSavedManualDestination(null); setManualError(""); }} aria-label="Xóa đường dẫn">×</button>}
               </div>
               <button type="submit" className="submit-button" disabled={busy || !url.trim()}>
                 {busy ? <><span className="button-spinner" /> Đang phân tích…</> : <>Tìm địa chỉ đích <ArrowUpRight size={17} /></>}
@@ -278,6 +307,49 @@ export default function Home() {
                   )}
                 </div>
               </div>
+            )}
+
+            {result && !result.ok && (
+              <section className="manual-fallback" aria-label="Cách tiếp tục an toàn">
+                <div className="manual-fallback-heading">
+                  <strong>Tiếp tục trong trình duyệt</strong>
+                  <span>Thao tác thủ công</span>
+                </div>
+                <p>Máy chủ phân tích không được website cho phép truy cập. Bạn có thể mở link gốc trong trình duyệt của mình và hoàn tất quy trình chính thức của website. Công cụ không tự vượt CAPTCHA hoặc kiểm tra chống bot.</p>
+                {sourceUrl && (
+                  <a className="open-source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">
+                    Mở link gốc trong tab mới <ArrowUpRight size={14} />
+                  </a>
+                )}
+                <form className="manual-destination-form" onSubmit={handleManualDestination}>
+                  <label htmlFor="manual-destination">NẾU BẠN ĐÃ TỚI ĐÍCH, DÁN URL TẠI ĐÂY</label>
+                  <div className="manual-destination-entry">
+                    <input
+                      id="manual-destination"
+                      name="manualDestination"
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://example.com/destination"
+                      value={manualDestination}
+                      onChange={(event) => {
+                        setManualDestination(event.target.value);
+                        setSavedManualDestination(null);
+                        setManualError("");
+                      }}
+                      maxLength={2048}
+                    />
+                    <button type="submit" disabled={!manualDestination.trim()}>Ghi nhận</button>
+                  </div>
+                  {manualError && <p className="manual-error" role="alert">{manualError}</p>}
+                </form>
+                {savedManualDestination && (
+                  <div className="manual-saved-result" aria-live="polite">
+                    <span className="manual-unverified-label">URL BẠN CUNG CẤP · CHƯA ĐƯỢC MÁY CHỦ XÁC MINH</span>
+                    <a href={savedManualDestination} target="_blank" rel="noopener noreferrer">{savedManualDestination} <ArrowUpRight size={13} /></a>
+                    <button type="button" className="copy-action" onClick={() => copyUrl(savedManualDestination)}>{copied ? "Đã sao chép ✓" : "Sao chép URL đã nhập"}</button>
+                  </div>
+                )}
+              </section>
             )}
 
             {result && !result.ok && hops.length > 0 && (
